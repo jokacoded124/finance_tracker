@@ -21,6 +21,11 @@
         </div>
     </div>
 
+    <div class="subnav">
+        <a href="{{ url_for('history') }}">📊 Monthly History</a>
+        <a href="{{ url_for('export_csv') }}">⬇ Export CSV</a>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -90,6 +95,23 @@
 
     <div class="section">
         <h2>Recent Transactions</h2>
+
+        <form class="filter-bar" method="GET">
+            <input
+                type="text" name="q" placeholder="Search category or description..."
+                value="{{ search_term }}"
+            >
+            <select name="type">
+                <option value="" {% if type_filter == "" %}selected{% endif %}>All</option>
+                <option value="income" {% if type_filter == "income" %}selected{% endif %}>Income only</option>
+                <option value="expense" {% if type_filter == "expense" %}selected{% endif %}>Expenses only</option>
+            </select>
+            <button type="submit" class="btn">Filter</button>
+            {% if search_term or type_filter %}
+                <a href="{{ url_for('home') }}" class="btn">Clear</a>
+            {% endif %}
+        </form>
+
         {% if transactions %}
             {% for transaction in transactions %}
                 <div class="transaction">
@@ -122,7 +144,7 @@
                 </div>
             {% endfor %}
         {% else %}
-            <p>No transactions yet.</p>
+            <p>No transactions found{% if search_term or type_filter %} for this filter{% endif %}.</p>
         {% endif %}
     </div>
 

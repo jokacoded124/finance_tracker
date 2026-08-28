@@ -1,6 +1,8 @@
+import csv
+import io
 from datetime import date
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 
 from database import get_db_connection
 
@@ -20,13 +22,30 @@ def home():
     today = date.today()
     current_month = today.strftime("%Y-%m")
 
-    # Transactions for the current month
-    transactions = connection.execute("""
+    # Optional filters from query string (search box on dashboard)
+    search_term = request.args.get("q", "").strip()
+    type_filter = request.args.get("type", "").strip()  # "income" / "expense" / ""
+
+    query = """
         SELECT *
         FROM transactions
         WHERE date LIKE ?
-        ORDER BY date DESC, id DESC
-    """, (current_month + "%",)).fetchall()
+    """
+    params = [current_month + "%"]
+
+    if type_filter in ("income", "expense"):
+        query += " AND type = ?"
+        params.append(type_filter)
+
+    if search_term:
+        query += " AND (category LIKE ? OR description LIKE ?)"
+        like_term = f"%{search_term}%"
+        params.extend([like_term, like_term])
+
+    query += " ORDER BY date DESC, id DESC"
+
+    # Transactions for the current month (filtered)
+    transactions = connection.execute(query, params).fetchall()
 
     # Income for this month
     total_income = connection.execute("""
@@ -86,6 +105,85 @@ def home():
         remaining_budget=remaining_budget,
         budget_percentage=min(budget_percentage, 100),
         category_breakdown=category_breakdown,
+        search_term=search_term,
+        type_filter=type_filter,
+    )
+
+
+# =========================
+# MONTHLY HISTORY
+# =========================
+
+@app.route("/history")
+def history():
+
+    connection = get_db_connection()
+
+    # Income and expenses grouped by month, most recent first (last 12 months of data)
+    rows = connection.execute("""
+        SELECT
+            substr(date, 1, 7) AS month,
+            SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) AS income,
+            SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS expenses
+        FROM transactions
+        GROUP BY month
+        ORDER BY month DESC
+        LIMIT 12
+    """).fetchall()
+
+    connection.close()
+
+    months = []
+    max_value = 0.01  # avoid divide-by-zero
+    for row in rows:
+        income = row["income"] or 0
+        expenses = row["expenses"] or 0
+        max_value = max(max_value, income, expenses)
+        months.append({
+            "month": row["month"],
+            "income": income,
+            "expenses": expenses,
+            "net": income - expenses,
+        })
+
+    return render_template("history.html", months=months, max_value=max_value)
+
+
+# =========================
+# EXPORT TO CSV
+# =========================
+
+@app.route("/export-csv")
+def export_csv():
+
+    connection = get_db_connection()
+
+    rows = connection.execute("""
+        SELECT date, type, category, description, payment_method, amount
+        FROM transactions
+        ORDER BY date DESC, id DESC
+    """).fetchall()
+
+    connection.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Type", "Category", "Description", "Payment Method", "Amount"])
+
+    for row in rows:
+        writer.writerow([
+            row["date"],
+            row["type"],
+            row["category"],
+            row["description"] or "",
+            row["payment_method"] or "",
+            row["amount"],
+        ])
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=transactions.csv"},
     )
 
 

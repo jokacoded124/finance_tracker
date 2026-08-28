@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly History · My Finances</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Monthly History</h1>
+        <a href="{{ url_for('home') }}" class="btn">← Back</a>
+    </div>
+
+    <div class="section">
+        {% if months %}
+            {% for m in months %}
+                <div class="history-row">
+                    <div class="history-month">{{ m.month }}</div>
+                    <div class="history-bars">
+                        <div class="history-bar-track">
+                            <div class="history-bar income-bar" style="width: {{ (m.income / max_value * 100) }}%;"></div>
+                        </div>
+                        <div class="history-bar-track">
+                            <div class="history-bar expense-bar" style="width: {{ (m.expenses / max_value * 100) }}%;"></div>
+                        </div>
+                    </div>
+                    <div class="history-values">
+                        <span class="income">+{{ "%.0f"|format(m.income) }}</span>
+                        <span class="expense">-{{ "%.0f"|format(m.expenses) }}</span>
+                        <span class="{% if m.net >= 0 %}income{% else %}expense{% endif %}">
+                            = {{ "%.0f"|format(m.net) }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No history yet — add some transactions first.</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
