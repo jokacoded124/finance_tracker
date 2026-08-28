@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Transaction</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="section">
+
+        <h1>✏️ Edit Transaction</h1>
+
+        <br>
+
+        <form method="POST">
+
+            <label>Amount</label>
+            <br>
+
+            <input
+                type="number"
+                name="amount"
+                step="0.01"
+                value="{{ transaction['amount'] }}"
+                required
+            >
+
+            <br><br>
+
+
+            <label>Category</label>
+            <br>
+
+            <input
+                type="text"
+                name="category"
+                value="{{ transaction['category'] }}"
+                required
+            >
+
+            <br><br>
+
+
+            <label>Description</label>
+            <br>
+
+            <input
+                type="text"
+                name="description"
+                value="{{ transaction['description'] or '' }}"
+            >
+
+            <br><br>
+
+
+            <label>Payment Method</label>
+            <br>
+
+            <select name="payment_method" required>
+
+                <option
+                    value="M-Pesa"
+                    {% if transaction['payment_method'] == 'M-Pesa' %}
+                    selected
+                    {% endif %}
+                >
+                    M-Pesa
+                </option>
+
+                <option
+                    value="Cash"
+                    {% if transaction['payment_method'] == 'Cash' %}
+                    selected
+                    {% endif %}
+                >
+                    Cash
+                </option>
+
+                <option
+                    value="Bank"
+                    {% if transaction['payment_method'] == 'Bank' %}
+                    selected
+                    {% endif %}
+                >
+                    Bank
+                </option>
+
+                <option
+                    value="Card"
+                    {% if transaction['payment_method'] == 'Card' %}
+                    selected
+                    {% endif %}
+                >
+                    Card
+                </option>
+
+            </select>
+
+            <br><br>
+
+
+            <label>Date</label>
+            <br>
+
+            <input
+                type="date"
+                name="date"
+                value="{{ transaction['date'] }}"
+                required
+            >
+
+            <br><br>
+
+
+            <button type="submit">
+                Save Changes
+            </button>
+
+            <br><br>
+
+            <a href="/">
+                ← Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

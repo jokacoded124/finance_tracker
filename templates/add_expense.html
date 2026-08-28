@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Record Spending</title>
+
+</head>
+
+<body>
+
+    <h1>💸 Record Spending</h1>
+
+    <form method="POST">
+
+        <label>Amount</label>
+        <br>
+
+        <input
+            type="number"
+            name="amount"
+            step="0.01"
+            placeholder="How much did you spend?"
+            required
+        >
+
+        <br><br>
+
+
+        <label>Category</label>
+        <br>
+
+        <select name="category" required>
+
+            <option value="">
+                Select category
+            </option>
+
+            <option value="Food">
+                🍔 Food
+            </option>
+
+            <option value="Transport">
+                🚗 Transport
+            </option>
+
+            <option value="Airtime">
+                📱 Airtime
+            </option>
+
+            <option value="Internet">
+                🌐 Internet
+            </option>
+
+            <option value="Education">
+                🎓 Education
+            </option>
+
+            <option value="Shopping">
+                🛒 Shopping
+            </option>
+
+            <option value="Entertainment">
+                🎮 Entertainment
+            </option>
+
+            <option value="Household">
+                🏠 Household
+            </option>
+
+            <option value="Technology">
+                💻 Technology
+            </option>
+
+            <option value="Gifts">
+                🎁 Gifts
+            </option>
+
+            <option value="Other">
+                📦 Other
+            </option>
+
+        </select>
+
+        <br><br>
+
+
+        <label>Payment Method</label>
+        <br>
+
+        <select name="payment_method" required>
+
+            <option value="">
+                Select payment method
+            </option>
+
+            <option value="M-Pesa">
+                M-Pesa
+            </option>
+
+            <option value="Cash">
+                Cash
+            </option>
+
+            <option value="Bank">
+                Bank
+            </option>
+
+            <option value="Card">
+                Card
+            </option>
+
+        </select>
+
+        <br><br>
+
+
+        <label>Description</label>
+        <br>
+
+        <input
+            type="text"
+            name="description"
+            placeholder="What did you spend it on?"
+        >
+
+        <br><br>
+
+
+        <label>Date</label>
+        <br>
+
+        <input
+            type="date"
+            name="date"
+            required
+        >
+
+        <br><br>
+
+
+        <button type="submit">
+            Save Spending
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="/">
+        ← Back to Dashboard
+    </a>
+
+</body>
+
+</html>

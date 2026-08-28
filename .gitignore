@@ -1,0 +1,16 @@
+# Virtual environment
+venv/
+
+# Database (contains your data — don't commit)
+finance.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables / secrets
+.env
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Add Money</title>
+
+</head>
+
+<body>
+
+    <h1>💵 Add Money</h1>
+
+    <form method="POST">
+
+        <label>Amount</label>
+        <br>
+
+        <input
+            type="number"
+            name="amount"
+            step="0.01"
+            placeholder="Enter amount"
+            required
+        >
+
+        <br><br>
+
+
+        <label>Where did the money come from?</label>
+        <br>
+
+        <select name="source" required>
+
+            <option value="">Select source</option>
+
+            <option value="Allowance">
+                Allowance
+            </option>
+
+            <option value="Salary">
+                Salary
+            </option>
+
+            <option value="Freelance">
+                Freelance
+            </option>
+
+            <option value="Business">
+                Business
+            </option>
+
+            <option value="Gift">
+                Gift
+            </option>
+
+            <option value="Other">
+                Other
+            </option>
+
+        </select>
+
+        <br><br>
+
+
+        <label>Payment Method</label>
+        <br>
+
+        <select name="payment_method" required>
+
+            <option value="">Select payment method</option>
+
+            <option value="M-Pesa">
+                M-Pesa
+            </option>
+
+            <option value="Cash">
+                Cash
+            </option>
+
+            <option value="Bank">
+                Bank
+            </option>
+
+            <option value="Card">
+                Card
+            </option>
+
+        </select>
+
+        <br><br>
+
+
+        <label>Description</label>
+        <br>
+
+        <input
+            type="text"
+            name="description"
+            placeholder="What is this money for?"
+        >
+
+        <br><br>
+
+
+        <label>Date</label>
+        <br>
+
+        <input
+            type="date"
+            name="date"
+            required
+        >
+
+        <br><br>
+
+
+        <button type="submit">
+            Save Money
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="/">
+        ← Back to Dashboard
+    </a>
+
+</body>
+
+</html>
