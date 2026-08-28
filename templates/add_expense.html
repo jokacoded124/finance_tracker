@@ -1,161 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Record Spending</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Expense · My Finances</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
+<div class="container">
+    <div class="header">
+        <h1>- Spending</h1>
+        <a href="{{ url_for('home') }}" class="btn">← Back</a>
+    </div>
 
-    <h1>💸 Record Spending</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-    <form method="POST">
+    <form class="form-card" method="POST">
+        <label for="amount">Amount (KSh)</label>
+        <input type="number" step="0.01" min="0.01" id="amount" name="amount" required>
 
-        <label>Amount</label>
-        <br>
-
-        <input
-            type="number"
-            name="amount"
-            step="0.01"
-            placeholder="How much did you spend?"
-            required
-        >
-
-        <br><br>
-
-
-        <label>Category</label>
-        <br>
-
-        <select name="category" required>
-
-            <option value="">
-                Select category
-            </option>
-
-            <option value="Food">
-                🍔 Food
-            </option>
-
-            <option value="Transport">
-                🚗 Transport
-            </option>
-
-            <option value="Airtime">
-                📱 Airtime
-            </option>
-
-            <option value="Internet">
-                🌐 Internet
-            </option>
-
-            <option value="Education">
-                🎓 Education
-            </option>
-
-            <option value="Shopping">
-                🛒 Shopping
-            </option>
-
-            <option value="Entertainment">
-                🎮 Entertainment
-            </option>
-
-            <option value="Household">
-                🏠 Household
-            </option>
-
-            <option value="Technology">
-                💻 Technology
-            </option>
-
-            <option value="Gifts">
-                🎁 Gifts
-            </option>
-
-            <option value="Other">
-                📦 Other
-            </option>
-
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+            <option value="">-- Select category --</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Rent">Rent</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
         </select>
 
-        <br><br>
+        <label for="description">Description (optional)</label>
+        <input type="text" id="description" name="description">
 
-
-        <label>Payment Method</label>
-        <br>
-
-        <select name="payment_method" required>
-
-            <option value="">
-                Select payment method
-            </option>
-
-            <option value="M-Pesa">
-                M-Pesa
-            </option>
-
-            <option value="Cash">
-                Cash
-            </option>
-
-            <option value="Bank">
-                Bank
-            </option>
-
-            <option value="Card">
-                Card
-            </option>
-
+        <label for="payment_method">Payment Method</label>
+        <select id="payment_method" name="payment_method">
+            <option value="M-Pesa">M-Pesa</option>
+            <option value="Bank">Bank</option>
+            <option value="Cash">Cash</option>
+            <option value="Other">Other</option>
         </select>
 
-        <br><br>
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="{{ today }}" required>
 
-
-        <label>Description</label>
-        <br>
-
-        <input
-            type="text"
-            name="description"
-            placeholder="What did you spend it on?"
-        >
-
-        <br><br>
-
-
-        <label>Date</label>
-        <br>
-
-        <input
-            type="date"
-            name="date"
-            required
-        >
-
-        <br><br>
-
-
-        <button type="submit">
-            Save Spending
-        </button>
-
+        <button type="submit" class="btn btn-expense">Save Expense</button>
     </form>
-
-    <br>
-
-    <a href="/">
-        ← Back to Dashboard
-    </a>
-
+</div>
 </body>
-
 </html>

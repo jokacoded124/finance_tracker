@@ -1,137 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Add Money</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Income · My Finances</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
+<div class="container">
+    <div class="header">
+        <h1>+ Money In</h1>
+        <a href="{{ url_for('home') }}" class="btn">← Back</a>
+    </div>
 
-    <h1>💵 Add Money</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-    <form method="POST">
+    <form class="form-card" method="POST">
+        <label for="amount">Amount (KSh)</label>
+        <input type="number" step="0.01" min="0.01" id="amount" name="amount" required>
 
-        <label>Amount</label>
-        <br>
-
-        <input
-            type="number"
-            name="amount"
-            step="0.01"
-            placeholder="Enter amount"
-            required
-        >
-
-        <br><br>
-
-
-        <label>Where did the money come from?</label>
-        <br>
-
-        <select name="source" required>
-
-            <option value="">Select source</option>
-
-            <option value="Allowance">
-                Allowance
-            </option>
-
-            <option value="Salary">
-                Salary
-            </option>
-
-            <option value="Freelance">
-                Freelance
-            </option>
-
-            <option value="Business">
-                Business
-            </option>
-
-            <option value="Gift">
-                Gift
-            </option>
-
-            <option value="Other">
-                Other
-            </option>
-
+        <label for="source">Source</label>
+        <select id="source" name="source" required>
+            <option value="">-- Select source --</option>
+            <option value="Salary">Salary</option>
+            <option value="Business">Business</option>
+            <option value="Gift">Gift</option>
+            <option value="Investment">Investment</option>
+            <option value="Other">Other</option>
         </select>
 
-        <br><br>
+        <label for="description">Description (optional)</label>
+        <input type="text" id="description" name="description">
 
-
-        <label>Payment Method</label>
-        <br>
-
-        <select name="payment_method" required>
-
-            <option value="">Select payment method</option>
-
-            <option value="M-Pesa">
-                M-Pesa
-            </option>
-
-            <option value="Cash">
-                Cash
-            </option>
-
-            <option value="Bank">
-                Bank
-            </option>
-
-            <option value="Card">
-                Card
-            </option>
-
+        <label for="payment_method">Payment Method</label>
+        <select id="payment_method" name="payment_method">
+            <option value="M-Pesa">M-Pesa</option>
+            <option value="Bank">Bank</option>
+            <option value="Cash">Cash</option>
+            <option value="Other">Other</option>
         </select>
 
-        <br><br>
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="{{ today }}" required>
 
-
-        <label>Description</label>
-        <br>
-
-        <input
-            type="text"
-            name="description"
-            placeholder="What is this money for?"
-        >
-
-        <br><br>
-
-
-        <label>Date</label>
-        <br>
-
-        <input
-            type="date"
-            name="date"
-            required
-        >
-
-        <br><br>
-
-
-        <button type="submit">
-            Save Money
-        </button>
-
+        <button type="submit" class="btn btn-income">Save Income</button>
     </form>
-
-    <br>
-
-    <a href="/">
-        ← Back to Dashboard
-    </a>
-
+</div>
 </body>
-
 </html>

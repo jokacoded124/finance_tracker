@@ -1,28 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
+from datetime import date
+
+from flask import Flask, render_template, request, redirect, url_for, flash
+
+from database import get_db_connection
 
 app = Flask(__name__)
+app.secret_key = "change-this-to-a-random-secret-key"  # needed for flash messages
 
-DATABASE = "finance.db"
 
-
-def get_db_connection():
-    connection = sqlite3.connect(DATABASE)
-    connection.row_factory = sqlite3.Row
-    return connection
+# =========================
+# HOME / DASHBOARD
+# =========================
 
 @app.route("/")
 def home():
 
     connection = get_db_connection()
 
-    # Get the current year and month
-    from datetime import date
-
     today = date.today()
     current_month = today.strftime("%Y-%m")
 
-    # Get transactions for the current month
+    # Transactions for the current month
     transactions = connection.execute("""
         SELECT *
         FROM transactions
@@ -30,7 +28,7 @@ def home():
         ORDER BY date DESC, id DESC
     """, (current_month + "%",)).fetchall()
 
-    # Calculate income for this month
+    # Income for this month
     total_income = connection.execute("""
         SELECT COALESCE(SUM(amount), 0)
         FROM transactions
@@ -38,7 +36,7 @@ def home():
         AND date LIKE ?
     """, (current_month + "%",)).fetchone()[0]
 
-    # Calculate expenses for this month
+    # Expenses for this month
     total_expenses = connection.execute("""
         SELECT COALESCE(SUM(amount), 0)
         FROM transactions
@@ -46,10 +44,9 @@ def home():
         AND date LIKE ?
     """, (current_month + "%",)).fetchone()[0]
 
-    # Calculate balance
     balance = total_income - total_expenses
 
-    # Get this month's budget
+    # This month's budget
     budget_result = connection.execute("""
         SELECT amount
         FROM budgets
@@ -57,17 +54,23 @@ def home():
     """, (current_month,)).fetchone()
 
     monthly_budget = budget_result["amount"] if budget_result else 0
-
-    # Calculate remaining budget
     remaining_budget = monthly_budget - total_expenses
 
-    # Calculate budget percentage
     if monthly_budget > 0:
         budget_percentage = (total_expenses / monthly_budget) * 100
     else:
         budget_percentage = 0
 
-    # Display month name
+    # Spending broken down by category (for this month) - used for a simple breakdown
+    category_breakdown = connection.execute("""
+        SELECT category, COALESCE(SUM(amount), 0) AS total
+        FROM transactions
+        WHERE type = 'expense'
+        AND date LIKE ?
+        GROUP BY category
+        ORDER BY total DESC
+    """, (current_month + "%",)).fetchall()
+
     month_name = today.strftime("%B %Y")
 
     connection.close()
@@ -81,8 +84,11 @@ def home():
         month_name=month_name,
         monthly_budget=monthly_budget,
         remaining_budget=remaining_budget,
-        budget_percentage=budget_percentage
+        budget_percentage=min(budget_percentage, 100),
+        category_breakdown=category_breakdown,
     )
+
+
 # =========================
 # DELETE TRANSACTION
 # =========================
@@ -100,6 +106,7 @@ def delete_transaction(transaction_id):
     connection.commit()
     connection.close()
 
+    flash("Transaction deleted.", "success")
     return redirect(url_for("home"))
 
 
@@ -124,11 +131,17 @@ def edit_transaction(transaction_id):
 
     if request.method == "POST":
 
-        amount = request.form["amount"]
-        category = request.form["category"]
-        description = request.form["description"]
-        payment_method = request.form["payment_method"]
-        date = request.form["date"]
+        amount = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+        payment_method = request.form.get("payment_method", "").strip()
+        transaction_date = request.form.get("date", "").strip()
+
+        error = validate_transaction_input(amount, category, transaction_date)
+        if error:
+            connection.close()
+            flash(error, "error")
+            return render_template("edit_transaction.html", transaction=transaction)
 
         connection.execute("""
             UPDATE transactions
@@ -139,17 +152,18 @@ def edit_transaction(transaction_id):
                 date = ?
             WHERE id = ?
         """, (
-            amount,
+            float(amount),
             category,
             description,
             payment_method,
-            date,
+            transaction_date,
             transaction_id
         ))
 
         connection.commit()
         connection.close()
 
+        flash("Transaction updated.", "success")
         return redirect(url_for("home"))
 
     connection.close()
@@ -169,11 +183,16 @@ def add_income():
 
     if request.method == "POST":
 
-        amount = request.form["amount"]
-        source = request.form["source"]
-        description = request.form["description"]
-        payment_method = request.form["payment_method"]
-        date = request.form["date"]
+        amount = request.form.get("amount", "").strip()
+        source = request.form.get("source", "").strip()
+        description = request.form.get("description", "").strip()
+        payment_method = request.form.get("payment_method", "").strip()
+        transaction_date = request.form.get("date", "").strip()
+
+        error = validate_transaction_input(amount, source, transaction_date)
+        if error:
+            flash(error, "error")
+            return render_template("add_income.html")
 
         connection = get_db_connection()
 
@@ -182,20 +201,21 @@ def add_income():
             (amount, type, category, description, payment_method, date)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            amount,
+            float(amount),
             "income",
             source,
             description,
             payment_method,
-            date
+            transaction_date
         ))
 
         connection.commit()
         connection.close()
 
+        flash("Income added.", "success")
         return redirect(url_for("home"))
 
-    return render_template("add_income.html")
+    return render_template("add_income.html", today=date.today().isoformat())
 
 
 # =========================
@@ -207,11 +227,16 @@ def add_expense():
 
     if request.method == "POST":
 
-        amount = request.form["amount"]
-        category = request.form["category"]
-        description = request.form["description"]
-        payment_method = request.form["payment_method"]
-        date = request.form["date"]
+        amount = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+        payment_method = request.form.get("payment_method", "").strip()
+        transaction_date = request.form.get("date", "").strip()
+
+        error = validate_transaction_input(amount, category, transaction_date)
+        if error:
+            flash(error, "error")
+            return render_template("add_expense.html")
 
         connection = get_db_connection()
 
@@ -220,28 +245,29 @@ def add_expense():
             (amount, type, category, description, payment_method, date)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            amount,
+            float(amount),
             "expense",
             category,
             description,
             payment_method,
-            date
+            transaction_date
         ))
 
         connection.commit()
         connection.close()
 
+        flash("Expense added.", "success")
         return redirect(url_for("home"))
 
-    return render_template("add_expense.html")
+    return render_template("add_expense.html", today=date.today().isoformat())
+
+
 # =========================
 # SET MONTHLY BUDGET
 # =========================
 
 @app.route("/set-budget", methods=["GET", "POST"])
 def set_budget():
-
-    from datetime import date
 
     today = date.today()
     current_month = today.strftime("%Y-%m")
@@ -250,18 +276,24 @@ def set_budget():
 
     if request.method == "POST":
 
-        amount = request.form["amount"]
+        amount = request.form.get("amount", "").strip()
+
+        if not amount or not is_positive_number(amount):
+            connection.close()
+            flash("Please enter a valid budget amount.", "error")
+            return redirect(url_for("set_budget"))
 
         connection.execute("""
             INSERT INTO budgets (month, amount)
             VALUES (?, ?)
             ON CONFLICT(month)
             DO UPDATE SET amount = excluded.amount
-        """, (current_month, amount))
+        """, (current_month, float(amount)))
 
         connection.commit()
         connection.close()
 
+        flash("Budget updated.", "success")
         return redirect(url_for("home"))
 
     budget = connection.execute("""
@@ -277,6 +309,29 @@ def set_budget():
         budget=budget,
         month_name=today.strftime("%B %Y")
     )
+
+
+# =========================
+# HELPERS
+# =========================
+
+def is_positive_number(value):
+    try:
+        return float(value) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def validate_transaction_input(amount, category, transaction_date):
+    """Return an error message string if input is invalid, otherwise None."""
+    if not is_positive_number(amount):
+        return "Please enter a valid amount greater than 0."
+    if not category:
+        return "Please choose a category."
+    if not transaction_date:
+        return "Please choose a date."
+    return None
+
 
 if __name__ == "__main__":
     app.run(debug=True)

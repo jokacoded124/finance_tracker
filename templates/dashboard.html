@@ -1,186 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Finances</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
-
 <div class="container">
 
     <div class="header">
-
         <div>
-
             <h1>💰 My Finances</h1>
-
-         <p>{{ month_name }}</p>
-
+            <p>{{ month_name }}</p>
         </div>
-
         <div class="actions">
-
-            <a href="/add-income"
-               class="btn btn-income">
-                + Money In
-            </a>
-
-            <a href="/add-expense"
-               class="btn btn-expense">
-                - Spending
-            </a>
-
+            <a href="{{ url_for('add_income') }}" class="btn btn-income">+ Money In</a>
+            <a href="{{ url_for('add_expense') }}" class="btn btn-expense">- Spending</a>
+            <a href="{{ url_for('set_budget') }}" class="btn btn-budget">Set Budget</a>
         </div>
-
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <div class="summary">
-
         <div class="card">
-
             <h3>AVAILABLE</h3>
-
             <div class="amount balance">
                 KSh {{ "%.2f"|format(balance) }}
             </div>
-
         </div>
-    # Get this month's budget
-    budget_result = connection.execute("""
-        SELECT amount
-        FROM budgets
-        WHERE month = ?
-    """, (current_month,)).fetchone()
-
-    monthly_budget = budget_result["amount"] if budget_result else 0
-
-    # Calculate remaining budget
-    remaining_budget = monthly_budget - total_expenses
-
-    # Calculate budget percentage
-    if monthly_budget > 0:
-        budget_percentage = (total_expenses / monthly_budget) * 100
-    else:
-        budget_percentage = 0
 
         <div class="card">
-
             <h3>MONEY RECEIVED</h3>
-
             <div class="amount income">
                 KSh {{ "%.2f"|format(total_income) }}
             </div>
-
         </div>
 
-
         <div class="card">
-
             <h3>MONEY SPENT</h3>
-
             <div class="amount expense">
                 KSh {{ "%.2f"|format(total_expenses) }}
             </div>
-
         </div>
 
+        <div class="card">
+            <h3>MONTHLY BUDGET</h3>
+            {% if monthly_budget > 0 %}
+                <div class="amount">
+                    KSh {{ "%.2f"|format(monthly_budget) }}
+                </div>
+                <div class="budget-bar">
+                    <div
+                        class="budget-bar-fill {% if budget_percentage >= 100 %}over{% endif %}"
+                        style="width: {{ budget_percentage }}%;"
+                    ></div>
+                </div>
+                <small>
+                    {{ "%.1f"|format(budget_percentage) }}% used ·
+                    KSh {{ "%.2f"|format(remaining_budget) }} left
+                </small>
+            {% else %}
+                <div class="amount">Not set</div>
+                <small><a href="{{ url_for('set_budget') }}">Set a budget →</a></small>
+            {% endif %}
+        </div>
     </div>
 
+    {% if category_breakdown %}
+    <div class="section">
+        <h2>Spending by Category</h2>
+        <div class="category-list">
+            {% for row in category_breakdown %}
+                <div class="category-row">
+                    <span>{{ row["category"] }}</span>
+                    <span>KSh {{ "%.2f"|format(row["total"]) }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="section">
-
         <h2>Recent Transactions</h2>
-
         {% if transactions %}
-
             {% for transaction in transactions %}
-
                 <div class="transaction">
-
                     <div class="transaction-info">
-
-                        <strong>
-                            {{ transaction["category"] }}
-                        </strong>
-
+                        <strong>{{ transaction["category"] }}</strong>
                         <small>
                             {{ transaction["description"] or "No description" }}
                             ·
-                            {{ transaction["payment_method"] }}
+                            {{ transaction["payment_method"] or "N/A" }}
                             ·
                             {{ transaction["date"] }}
                         </small>
-
                     </div>
-
-<div>
-
-    <div
-        class="transaction-amount
-        {% if transaction['type'] == 'income' %}
-            income
-        {% else %}
-            expense
-        {% endif %}"
-    >
-
-        {% if transaction["type"] == "income" %}
-            +
-        {% else %}
-            -
-        {% endif %}
-
-        KSh {{ "%.2f"|format(transaction["amount"]) }}
-
-    </div>
-
-<a
-    href="{{ url_for('edit_transaction', transaction_id=transaction['id']) }}"
->
-    Edit
-</a>
-    <form
-        method="POST"
-        action="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}"
-        onsubmit="return confirm('Delete this transaction?');"
-    >
-
-        <button type="submit">
-            Delete
-        </button>
-
-    </form>
-
-</div>
+                    <div class="transaction-right">
+                        <div class="transaction-amount {% if transaction['type'] == 'income' %}income{% else %}expense{% endif %}">
+                            {% if transaction["type"] == "income" %}+{% else %}-{% endif %}
+                            KSh {{ "%.2f"|format(transaction["amount"]) }}
+                        </div>
+                        <div class="transaction-actions">
+                            <a href="{{ url_for('edit_transaction', transaction_id=transaction['id']) }}">Edit</a>
+                            <form
+                                method="POST"
+                                action="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}"
+                                onsubmit="return confirm('Delete this transaction?');"
+                            >
+                                <button type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-
             {% endfor %}
-
         {% else %}
-
             <p>No transactions yet.</p>
-
         {% endif %}
-
     </div>
 
-
 </div>
-
 </body>
-
 </html>

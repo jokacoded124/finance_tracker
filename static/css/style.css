@@ -1,115 +1,190 @@
+:root {
+    --bg: #f4f5f9;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --blue: #2563eb;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #f59e0b;
+    --border-radius: 12px;
+}
+
 * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #f5f7fa;
-    color: #1f2937;
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
 }
 
 .container {
-    width: 90%;
-    max-width: 1100px;
-    margin: 40px auto;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
 .header h1 {
+    margin: 0;
     font-size: 28px;
 }
 
 .header p {
-    color: #6b7280;
-    margin-top: 5px;
+    margin: 4px 0 0;
+    color: var(--muted);
 }
 
 .actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btn {
-    text-decoration: none;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-weight: bold;
     display: inline-block;
-}
-
-.btn-income {
-    background: #16a34a;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
     color: white;
+    background: var(--muted);
 }
 
-.btn-expense {
-    background: #dc2626;
-    color: white;
+.btn-income { background: var(--green); }
+.btn-expense { background: var(--red); }
+.btn-budget { background: var(--blue); }
+
+/* Flash messages */
+.flash {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
 }
 
+.flash-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.flash-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Summary cards */
 .summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
 }
 
 .card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .card h3 {
-    color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 10px;
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-transform: uppercase;
 }
 
 .card .amount {
-    font-size: 25px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 700;
 }
 
-.income {
-    color: #16a34a;
+.card small {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12px;
 }
 
-.expense {
-    color: #dc2626;
+.balance { color: var(--blue); }
+.income { color: var(--green); }
+.expense { color: var(--red); }
+
+.budget-bar {
+    background: #e5e7eb;
+    border-radius: 999px;
+    height: 8px;
+    margin-top: 12px;
+    overflow: hidden;
 }
 
-.balance {
-    color: #2563eb;
+.budget-bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 999px;
 }
 
+.budget-bar-fill.over {
+    background: var(--red);
+}
+
+/* Sections */
 .section {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .section h2 {
-    margin-bottom: 20px;
+    margin-top: 0;
+    font-size: 18px;
 }
 
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.category-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.category-row:last-child {
+    border-bottom: none;
+}
+
+/* Transactions */
 .transaction {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #eee;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .transaction:last-child {
@@ -118,44 +193,77 @@ body {
 
 .transaction-info strong {
     display: block;
-    margin-bottom: 5px;
+    font-size: 15px;
 }
 
 .transaction-info small {
-    color: #6b7280;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.transaction-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .transaction-amount {
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 15px;
 }
 
-@media (max-width: 700px) {
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
 
-    .container {
-        width: 94%;
-        margin: 20px auto;
-    }
+.transaction-actions a {
+    color: var(--blue);
+    text-decoration: none;
+}
 
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 20px;
-    }
+.transaction-actions form {
+    display: inline;
+}
 
-    .actions {
-        width: 100%;
-    }
+.transaction-actions button {
+    border: none;
+    background: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+}
 
-    .btn {
-        flex: 1;
-        text-align: center;
-    }
+/* Forms */
+.form-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 480px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
 
-    .summary {
-        grid-template-columns: 1fr;
-    }
+.form-card label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 12px;
+    color: var(--muted);
+}
 
-    .transaction {
-        gap: 15px;
-    }
+.form-card input,
+.form-card select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.form-card button {
+    margin-top: 20px;
 }
