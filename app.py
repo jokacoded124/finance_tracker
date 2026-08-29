@@ -1,13 +1,80 @@
 import csv
 import io
+import csv
+import io
+import os
 from datetime import date
 
 from flask import Flask, render_template, request, redirect, url_for, flash, Response
+from flask_login import (
+    LoginManager, UserMixin, login_user, logout_user,
+    login_required, current_user
+)
+from werkzeug.security import check_password_hash
 
 from database import get_db_connection
 
 app = Flask(__name__)
-app.secret_key = "change-this-to-a-random-secret-key"  # needed for flash messages
+
+# Secret key — used to sign session cookies. Set via environment variable in production.
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+
+# Single-user login credentials, set via environment variables.
+# See generate_password_hash.py to create APP_PASSWORD_HASH.
+APP_USERNAME = os.environ.get("APP_USERNAME", "admin")
+APP_PASSWORD_HASH = os.environ.get("APP_PASSWORD_HASH", "")
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+
+class User(UserMixin):
+    """Single hardcoded user — id is always '1'."""
+    id = "1"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == "1":
+        return User()
+    return None
+
+
+# =========================
+# LOGIN / LOGOUT
+# =========================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        valid_username = username == APP_USERNAME
+        valid_password = bool(APP_PASSWORD_HASH) and check_password_hash(APP_PASSWORD_HASH, password)
+
+        if valid_username and valid_password:
+            login_user(User(), remember=True)
+            flash("Welcome back!", "success")
+            next_page = request.args.get("next")
+            return redirect(next_page or url_for("home"))
+
+        flash("Invalid username or password.", "error")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out.", "success")
+    return redirect(url_for("login"))
 
 
 # =========================
@@ -15,6 +82,7 @@ app.secret_key = "change-this-to-a-random-secret-key"  # needed for flash messag
 # =========================
 
 @app.route("/")
+@login_required
 def home():
 
     connection = get_db_connection()
@@ -115,6 +183,7 @@ def home():
 # =========================
 
 @app.route("/history")
+@login_required
 def history():
 
     connection = get_db_connection()
@@ -154,6 +223,7 @@ def history():
 # =========================
 
 @app.route("/export-csv")
+@login_required
 def export_csv():
 
     connection = get_db_connection()
@@ -192,6 +262,7 @@ def export_csv():
 # =========================
 
 @app.route("/delete-transaction/<int:transaction_id>", methods=["POST"])
+@login_required
 def delete_transaction(transaction_id):
 
     connection = get_db_connection()
@@ -213,6 +284,7 @@ def delete_transaction(transaction_id):
 # =========================
 
 @app.route("/edit-transaction/<int:transaction_id>", methods=["GET", "POST"])
+@login_required
 def edit_transaction(transaction_id):
 
     connection = get_db_connection()
@@ -277,6 +349,7 @@ def edit_transaction(transaction_id):
 # =========================
 
 @app.route("/add-income", methods=["GET", "POST"])
+@login_required
 def add_income():
 
     if request.method == "POST":
@@ -321,6 +394,7 @@ def add_income():
 # =========================
 
 @app.route("/add-expense", methods=["GET", "POST"])
+@login_required
 def add_expense():
 
     if request.method == "POST":
@@ -365,6 +439,7 @@ def add_expense():
 # =========================
 
 @app.route("/set-budget", methods=["GET", "POST"])
+@login_required
 def set_budget():
 
     today = date.today()

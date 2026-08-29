@@ -1,49 +1,133 @@
 # 💰 My Finances — Personal Finance Tracker
 
-A simple Flask + SQLite web app for tracking income, expenses, and a monthly budget.
+A Flask + SQLite web app for tracking income, expenses, and a monthly budget —
+designed to run online so you can use it from both your phone and computer,
+protected by a single username/password login.
 
 ## Features
 
 - Add income and expenses with category, payment method, description, and date
 - Edit or delete any transaction
-- Monthly budget with a progress bar (shows % used and amount remaining)
+- Monthly budget with a progress bar (% used and amount remaining)
 - Spending breakdown by category for the current month
 - Search/filter transactions by keyword or type (income/expense)
-- Monthly history view comparing income vs. expenses over the last 12 months
+- Monthly history comparing income vs. expenses over the last 12 months
 - Export all transactions to CSV
-- Input validation and flash messages for errors/success
+- Single username/password login (session-based, "remember me")
+- Mobile-friendly layout
 
-## Setup
+---
+
+## 1. Local setup
 
 ```bash
-# 1. Create and activate a virtual environment
+# Create and activate a virtual environment
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Initialize the database (creates finance.db)
+# Create the database
 python init_db.py
 
-# 4. Run the app
+# Generate your login password hash
+python generate_password_hash.py
+```
+
+`generate_password_hash.py` will ask you to type a password, then print a long
+hash string like `scrypt:32768:8:1$...`. Copy it — you'll need it in the next step.
+
+### Set your login credentials (required)
+
+The app reads these from environment variables — never hardcode your password
+in the code. On Windows PowerShell, for a local test run:
+
+```powershell
+$env:SECRET_KEY="some-long-random-string"
+$env:APP_USERNAME="yourname"
+$env:APP_PASSWORD_HASH="scrypt:32768:8:1$...(paste the full hash here)"
 python app.py
 ```
 
-Then open **http://127.0.0.1:5000** in your browser.
+Then open **http://127.0.0.1:5000** — you'll be asked to log in with the
+username/password you just chose.
+
+If you don't set `APP_PASSWORD_HASH`, login will always fail (this is intentional —
+there's no default password).
+
+---
+
+## 2. Deploying so you can use it from your phone (PythonAnywhere)
+
+PythonAnywhere's free tier is used here because, unlike some other free hosts,
+your database file **won't get wiped** when you update your code — important
+for a finance app.
+
+1. **Create a free account** at https://www.pythonanywhere.com
+2. **Upload your project**:
+   - Easiest: push your code to GitHub (you're already doing this), then in
+     PythonAnywhere open a **Bash console** and run:
+     ```
+     git clone https://github.com/jokacoded124/finance_tracker.git
+     ```
+3. **Create a virtualenv and install dependencies** (in the Bash console):
+   ```
+   cd finance_tracker
+   python3.10 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   python init_db.py
+   python generate_password_hash.py
+   ```
+   Copy the printed hash for the next step.
+4. **Set environment variables**: Go to the **Web** tab → your web app →
+   scroll to **Environment variables** and add:
+   - `SECRET_KEY` = a long random string
+   - `APP_USERNAME` = your chosen username
+   - `APP_PASSWORD_HASH` = the hash from step 3
+5. **Configure the Web app** (Web tab):
+   - Set the source code directory to `/home/yourusername/finance_tracker`
+   - Set the working directory the same way
+   - Edit the WSGI file it gives you so it points to your `app.py`'s `app` object, e.g.:
+     ```python
+     import sys
+     path = '/home/yourusername/finance_tracker'
+     if path not in sys.path:
+         sys.path.append(path)
+     from app import app as application
+     ```
+   - Point the virtualenv path to `/home/yourusername/finance_tracker/venv`
+6. Click **Reload** on the Web tab. Your app is now live at
+   `https://yourusername.pythonanywhere.com` — open that on your phone and
+   your computer, log in, and you're tracking finances from anywhere.
+
+### Updating the live app later
+
+Whenever you make changes locally and push to GitHub, pull them on PythonAnywhere:
+```
+cd finance_tracker
+git pull
+```
+Then hit **Reload** on the Web tab. Your `finance.db` stays untouched.
+
+---
 
 ## Project Structure
 
 ```
 finance_tracker/
-├── app.py                  # Flask routes and logic
-├── database.py             # Shared DB connection helper
-├── init_db.py               # Creates tables (run once)
+├── app.py                       # Flask routes and logic
+├── database.py                  # Shared DB connection helper
+├── init_db.py                   # Creates tables (run once)
+├── generate_password_hash.py    # One-time helper to create your login hash
 ├── requirements.txt
+├── .env.example                 # Reference for required environment variables
 ├── static/
 │   └── css/style.css
 └── templates/
+    ├── login.html
     ├── dashboard.html
     ├── add_income.html
     ├── add_expense.html
@@ -52,16 +136,18 @@ finance_tracker/
     └── history.html
 ```
 
-## Notes
+## Security notes
 
-- `finance.db` is excluded from git via `.gitignore` since it contains your personal data.
-- Change `app.secret_key` in `app.py` before deploying anywhere public.
-- Set `debug=False` in `app.run()` before deploying to production.
+- `finance.db` is excluded from git via `.gitignore` — it holds your real data.
+- Never commit `SECRET_KEY` or `APP_PASSWORD_HASH` to GitHub — always set them
+  as environment variables on whatever host you use.
+- `debug=True` in `app.py` is fine for local development but should be
+  turned off (`debug=False`) for anything public-facing — PythonAnywhere
+  handles this for you automatically since it doesn't use `app.run()` directly.
 
 ## Possible next steps
 
-- User accounts / authentication (multiple users, one DB)
-- Recurring transactions (e.g. rent, subscriptions)
-- Per-category budgets, not just one overall monthly budget
-- Charts using Chart.js instead of CSS bars
-- Deploy to Render/Railway/PythonAnywhere
+- Per-category budgets instead of one overall monthly budget
+- Recurring transactions (rent, subscriptions)
+- Charts via Chart.js instead of CSS bars
+- "Add to Home Screen" support (PWA manifest) for a more app-like feel on mobile
