@@ -20,6 +20,14 @@
         <a href="{{ url_for('home') }}" class="btn">← Back</a>
     </div>
 
+    {% if months %}
+    <div class="section">
+        <div class="chart-wrap">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="section">
         {% if months %}
             {% for m in months %}
@@ -47,5 +55,49 @@
         {% endif %}
     </div>
 </div>
+
+{% if months %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const chartLabels = {{ chart_labels | tojson }};
+    const chartIncome = {{ chart_income | tojson }};
+    const chartExpenses = {{ chart_expenses | tojson }};
+
+    new Chart(document.getElementById("historyChart"), {
+        type: "line",
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: "Income",
+                    data: chartIncome,
+                    borderColor: "#16a34a",
+                    backgroundColor: "rgba(22, 163, 74, 0.1)",
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: "Expenses",
+                    data: chartExpenses,
+                    borderColor: "#dc2626",
+                    backgroundColor: "rgba(220, 38, 38, 0.1)",
+                    tension: 0.3,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "bottom" }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endif %}
+
 </body>
 </html>

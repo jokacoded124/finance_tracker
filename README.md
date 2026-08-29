@@ -9,12 +9,14 @@ protected by a single username/password login.
 - Add income and expenses with category, payment method, description, and date
 - Edit or delete any transaction
 - Monthly budget with a progress bar (% used and amount remaining)
-- Spending breakdown by category for the current month
+- **Per-category budgets** with individual progress bars (e.g. Food: 5000, Transport: 2000)
+- **Recurring transactions** — set rent, salary, subscriptions, etc. to auto-add each month
+- Spending breakdown by category, shown as a pie chart and a list
 - Search/filter transactions by keyword or type (income/expense)
-- Monthly history comparing income vs. expenses over the last 12 months
+- Monthly history with an income vs. expenses line chart, last 12 months
 - Export all transactions to CSV
 - Single username/password login (session-based, "remember me")
-- Mobile-friendly layout
+- Mobile-friendly layout, installable as a home-screen app (PWA)
 
 ---
 
@@ -111,6 +113,39 @@ cd finance_tracker
 git pull
 ```
 Then hit **Reload** on the Web tab. Your `finance.db` stays untouched.
+
+### If you're upgrading an existing live database (adding category budgets / recurring transactions)
+
+If your `finance.db` already exists on the server from before these features were added,
+run the migration script once, in a Bash console, instead of `init_db.py`:
+
+```
+cd finance_tracker
+source venv/bin/activate
+python migrate.py
+```
+
+This safely adds the two new tables without touching any of your existing transactions
+or budgets. It's safe to run more than once. Then **Reload** the web app.
+
+On PythonAnywhere's free tier there's no "Environment variables" section on the Web tab —
+credentials are set directly inside the WSGI configuration file instead
+(`/var/www/yourusername_pythonanywhere_com_wsgi.py`):
+
+```python
+import sys
+import os
+
+path = '/home/yourusername/finance_tracker'
+if path not in sys.path:
+    sys.path.append(path)
+
+os.environ['SECRET_KEY'] = 'your-secret-key'
+os.environ['APP_USERNAME'] = 'your-username'
+os.environ['APP_PASSWORD_HASH'] = 'your-hash-from-generate_password_hash.py'
+
+from app import app as application
+```
 
 ---
 

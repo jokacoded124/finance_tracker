@@ -31,6 +31,8 @@
 
     <div class="subnav">
         <a href="{{ url_for('history') }}">📊 Monthly History</a>
+        <a href="{{ url_for('category_budgets_view') }}">🎯 Category Budgets</a>
+        <a href="{{ url_for('recurring_list') }}">🔁 Recurring</a>
         <a href="{{ url_for('export_csv') }}">⬇ Export CSV</a>
     </div>
 
@@ -87,9 +89,38 @@
         </div>
     </div>
 
+    {% if category_budgets %}
+    <div class="section">
+        <h2>Category Budgets</h2>
+        {% for cb in category_budgets %}
+            <div class="cat-budget-row">
+                <div class="cat-budget-top">
+                    <span>{{ cb.category }}</span>
+                    <span>KSh {{ "%.0f"|format(cb.spent) }} / {{ "%.0f"|format(cb.limit) }}</span>
+                </div>
+                <div class="budget-bar">
+                    <div
+                        class="budget-bar-fill {% if cb.over %}over{% endif %}"
+                        style="width: {{ cb.percentage }}%;"
+                    ></div>
+                </div>
+                {% if cb.over %}
+                    <small class="expense">Over by KSh {{ "%.0f"|format(cb.spent - cb.limit) }}</small>
+                {% else %}
+                    <small>KSh {{ "%.0f"|format(cb.remaining) }} left</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <small><a href="{{ url_for('category_budgets_view') }}">Edit category budgets →</a></small>
+    </div>
+    {% endif %}
+
     {% if category_breakdown %}
     <div class="section">
         <h2>Spending by Category</h2>
+        <div class="chart-wrap">
+            <canvas id="categoryChart"></canvas>
+        </div>
         <div class="category-list">
             {% for row in category_breakdown %}
                 <div class="category-row">
@@ -157,6 +188,36 @@
     </div>
 
 </div>
+
+{% if category_breakdown %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const categoryLabels = {{ category_breakdown | map(attribute="category") | list | tojson }};
+    const categoryTotals = {{ category_breakdown | map(attribute="total") | list | tojson }};
+
+    new Chart(document.getElementById("categoryChart"), {
+        type: "pie",
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryTotals,
+                backgroundColor: [
+                    "#2563eb", "#16a34a", "#dc2626", "#f59e0b",
+                    "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"
+                ],
+                borderWidth: 2,
+                borderColor: "#ffffff"
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "bottom", labels: { boxWidth: 14, font: { size: 12 } } }
+            }
+        }
+    });
+</script>
+{% endif %}
 
 <script>
     if ("serviceWorker" in navigator) {

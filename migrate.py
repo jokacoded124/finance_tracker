@@ -1,9 +1,11 @@
 """
-Run this file once to create the database and its tables:
+Run this once on your EXISTING database (local or on PythonAnywhere) to add
+the new tables needed for per-category budgets and recurring transactions,
+without touching any of your existing transactions or budget data.
 
-    python init_db.py
+    python migrate.py
 
-It is safe to run multiple times - existing tables are left untouched.
+Safe to run multiple times.
 """
 
 import sqlite3
@@ -11,26 +13,6 @@ import sqlite3
 DATABASE = "finance.db"
 
 connection = sqlite3.connect(DATABASE)
-
-connection.execute("""
-    CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        amount REAL NOT NULL,
-        type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
-        category TEXT NOT NULL,
-        description TEXT,
-        payment_method TEXT,
-        date TEXT NOT NULL
-    )
-""")
-
-connection.execute("""
-    CREATE TABLE IF NOT EXISTS budgets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        month TEXT NOT NULL UNIQUE,
-        amount REAL NOT NULL
-    )
-""")
 
 connection.execute("""
     CREATE TABLE IF NOT EXISTS category_budgets (
@@ -59,4 +41,4 @@ connection.execute("""
 connection.commit()
 connection.close()
 
-print("Database initialized successfully (finance.db)")
+print("Migration complete: category_budgets and recurring_transactions tables are ready.")

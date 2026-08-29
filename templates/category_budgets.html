@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Budgets · My Finances</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Category Budgets</h1>
+        <a href="{{ url_for('home') }}" class="btn">← Back</a>
+    </div>
+    <p class="subtitle">Set a spending limit per category for {{ month_name }}. Leave blank for no limit.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form class="form-card" method="POST">
+        {% for category in categories %}
+            <label for="amount_{{ category }}">{{ category }} (KSh)</label>
+            <input
+                type="number" step="0.01" min="0"
+                id="amount_{{ category }}" name="amount_{{ category }}"
+                value="{{ existing[category] if category in existing else '' }}"
+                placeholder="No limit"
+            >
+        {% endfor %}
+
+        <button type="submit" class="btn btn-budget">Save Category Budgets</button>
+    </form>
+</div>
+</body>
+</html>
